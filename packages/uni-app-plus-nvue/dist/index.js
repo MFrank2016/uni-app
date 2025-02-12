@@ -1500,7 +1500,7 @@ var serviceContext = (function () {
     });
   }
 
-  function registerConfig (config) {
+  function registerConfig (config, Vue) {
     Object.assign(__uniConfig, config);
 
     __uniConfig.viewport = '';
@@ -5984,7 +5984,8 @@ var serviceContext = (function () {
     data,
     header,
     method = 'GET',
-    responseType
+    responseType,
+    sslVerify = true
   } = {}) {
     const stream = requireNativePlugin('stream');
     const headers = {};
@@ -6024,7 +6025,9 @@ var serviceContext = (function () {
       headers,
       type: responseType === 'arraybuffer' ? 'base64' : 'text',
       // weex 官方文档未说明实际支持 timeout，单位：ms
-      timeout: timeout || 6e5
+      timeout: timeout || 6e5,
+      // 配置和weex模块内相反
+      sslVerify: !sslVerify
     };
     if (method !== 'GET') {
       options.body = data;
@@ -9153,7 +9156,11 @@ var serviceContext = (function () {
     }
   });
 
-  UniServiceJSBridge.publishHandler = UniServiceJSBridge.emit; // TODO
+  function publishHandler (event, args, pageId) {
+    // TODO
+  }
+
+  UniServiceJSBridge.publishHandler = publishHandler;
   UniServiceJSBridge.invokeCallbackHandler = invokeCallbackHandler;
 
   var index = {

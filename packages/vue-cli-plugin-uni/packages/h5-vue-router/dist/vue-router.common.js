@@ -1,6 +1,6 @@
 /*!
   * vue-router v3.0.1
-  * (c) 2018 Evan You
+  * (c) 2020 Evan You
   * @license MIT
   */
 'use strict';
@@ -1325,7 +1325,6 @@ function normalizeLocation (
 /*  */
 
 
-
 function createMatcher (
   routes,
   router
@@ -1495,7 +1494,7 @@ function createMatcher (
       if (record.meta.id) {
         record.components.default.name = record.meta.name + '-' + location.params.__id__;
       } else {
-        record = Object.assign({}, record);
+        record = extend({}, record);
         record.components = {
           'default': {
             name: record.meta.name + '-' + location.params.__id__,
@@ -1671,19 +1670,19 @@ function scrollToPosition (shouldScroll, position) {
 
 /*  */
 
-var supportsPushState = inBrowser && (function() {
-	var ua = window.navigator.userAgent;
+var supportsPushState = inBrowser && (function () {
+  var ua = window.navigator.userAgent;
 
-	if (
-		(ua.indexOf('Android 2.') !== -1 || ua.indexOf('Android 4.0') !== -1) &&
+  if (
+    (ua.indexOf('Android 2.') !== -1 || ua.indexOf('Android 4.0') !== -1) &&
 		ua.indexOf('Mobile Safari') !== -1 &&
 		ua.indexOf('Chrome') === -1 &&
 		ua.indexOf('Windows Phone') === -1
-	) {
-		return false
-	}
+  ) {
+    return false
+  }
 
-	return window.history && 'pushState' in window.history
+  return window.history && 'pushState' in window.history
 })();
 
 // use User Timing api (if present) for more accurate key precision
@@ -1697,39 +1696,39 @@ function genKey () {
   return Time.now().toFixed(3)
 }
 
-function getStateKey() {
-	return _key
+function getStateKey () {
+  return _key
 }
 
-function setStateKey(key) {
-	_key = key;
+function setStateKey (key) {
+  _key = key;
 }
 
-function pushState(url  , id  , replace  ) {
-	saveScrollPosition();
-	// try...catch the pushState call to get around Safari
-	// DOM Exception 18 where it limits to 100 pushState calls
-	var history = window.history;
-	try {
-		if (replace) {
-			history.replaceState({
+function pushState (url , id , replace ) {
+  saveScrollPosition();
+  // try...catch the pushState call to get around Safari
+  // DOM Exception 18 where it limits to 100 pushState calls
+  var history = window.history;
+  try {
+    if (replace) {
+      history.replaceState({
         id: id,
-				key: _key
-			}, '', url);
-		} else {
-			_key = genKey();
-			history.pushState({
+        key: _key
+      }, '', url);
+    } else {
+      _key = genKey();
+      history.pushState({
         id: id,
-				key: _key
-			}, '', url);
-		}
-	} catch (e) {
-		window.location[replace ? 'replace' : 'assign'](url);
-	}
+        key: _key
+      }, '', url);
+    }
+  } catch (e) {
+    window.location[replace ? 'replace' : 'assign'](url);
+  }
 }
 
-function replaceState(url  , id  ) {
-	pushState(url, id, true);
+function replaceState (url , id ) {
+  pushState(url, id, true);
 }
 
 /*  */
@@ -2205,8 +2204,9 @@ var HTML5History = (function (History$$1) {
       // fixed by xxxxxx
       var id = e.state && e.state.id;
       if (!id) {
-        // TODO
-        id = router.id;
+        // 当手动切换页面时，强制刷新
+        return window.location.reload()
+        // id = router.id
       }
 
       this$1.transitionTo({ // fixed by xxxxxx
@@ -2230,8 +2230,14 @@ var HTML5History = (function (History$$1) {
     var this$1 = this;
 
     if (typeof location === 'object') { // fixed by xxxxxx
+      location.params = location.params || {};
+      var hasId = location.params.__id__;
       switch (location.type) {
         case 'navigateTo':
+          if (!hasId) {
+            this.router.id++;
+          }
+          break
         case 'redirectTo':
         case 'reLaunch':
           this.router.id++;
@@ -2239,8 +2245,9 @@ var HTML5History = (function (History$$1) {
         case 'switchTab':
           break
       }
-      location.params = location.params || {};
-      location.params.__id__ = this.router.id;
+      if (!hasId) {
+        location.params.__id__ = this.router.id;
+      }
     }
 
     var ref = this;
@@ -2284,13 +2291,8 @@ var HTML5History = (function (History$$1) {
     if (getLocation(this.base) !== this.current.fullPath) {
       var current = cleanPath(this.base + this.current.fullPath);
       // fixed by xxxxxx
-      var location = {
-        path: current,
-        params: {
-          __id__: this.current.params.__id__
-        }
-      };
-      push ? pushState(location, location.params.__id__) : replaceState(location, location.params.__id__);
+      var id = this.current.params.__id__;
+      push ? pushState(current, id) : replaceState(current, id);
     }
   };
 
@@ -2311,7 +2313,7 @@ function getLocation (base) {
   if (base && path.indexOf(base) === 0) {
     path = path.slice(base.length);
   }
-  return (path || '/') + window.location.search + window.location.hash
+  return (path || '/') + stringifyQuery(resolveQuery(window.location.search)) + window.location.hash
 }
 
 /*  */
@@ -2352,8 +2354,9 @@ var HashHistory = (function (History$$1) {
       // fixed by xxxxxx
       var id = e.state && e.state.id;
       if (!id) {
-        // TODO
-        id = router.id;
+        // 当手动切换页面时，强制刷新
+        return window.location.reload()
+        // id = router.id
       }
 
       this$1.transitionTo({
@@ -2376,8 +2379,14 @@ var HashHistory = (function (History$$1) {
     var this$1 = this;
 
     if (typeof location === 'object') { // fixed by xxxxxx
+      location.params = location.params || {};
+      var hasId = location.params.__id__;
       switch (location.type) {
         case 'navigateTo':
+          if (!hasId) {
+            this.router.id++;
+          }
+          break
         case 'redirectTo':
         case 'reLaunch':
           this.router.id++;
@@ -2385,8 +2394,10 @@ var HashHistory = (function (History$$1) {
         case 'switchTab':
           break
       }
-      location.params = location.params || {};
-      location.params.__id__ = this.router.id;
+
+      if (!hasId) {
+        location.params.__id__ = this.router.id;
+      }
     }
 
     var ref = this;
@@ -2776,8 +2787,8 @@ function createHref (base, fullPath, mode) {
 VueRouter.install = install;
 VueRouter.version = '3.0.1';
 
-if (inBrowser && window.Vue) {
-  window.Vue.use(VueRouter);
-}
+// if (inBrowser && window.Vue) {
+//   window.Vue.use(VueRouter)
+// }
 
 module.exports = VueRouter;

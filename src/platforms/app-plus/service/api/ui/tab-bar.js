@@ -19,36 +19,43 @@ export function setTabBarItem ({
   index,
   text,
   iconPath,
-  selectedIconPath
+  selectedIconPath,
+  pagePath,
+  visible,
+  iconfont
 }) {
-  if (!isTabBarPage()) {
-    return {
-      errMsg: 'setTabBarItem:fail not TabBar page'
+  tabBar.setTabBarItem(index, text, iconPath, selectedIconPath, visible, iconfont)
+  const route = pagePath && __uniRoutes.find(({ path }) => path === pagePath)
+  if (route) {
+    const meta = route.meta
+    meta.isTabBar = true
+    meta.tabBarIndex = index
+    meta.isQuit = true
+    const tabBar = __uniConfig.tabBar
+    if (tabBar && tabBar.list && tabBar.list[index]) {
+      tabBar.list[index].pagePath = pagePath.startsWith('/') ? pagePath.substring(1) : pagePath
     }
   }
-  tabBar.setTabBarItem(index, text, iconPath, selectedIconPath)
   return {
     errMsg: 'setTabBarItem:ok'
   }
 }
 
-export function setTabBarStyle ({
-  color,
-  selectedColor,
-  backgroundColor,
-  borderStyle
-}) {
+export function setTabBarStyle (style = {}) {
   if (!isTabBarPage()) {
     return {
       errMsg: 'setTabBarStyle:fail not TabBar page'
     }
   }
-  tabBar.setTabBarStyle({
-    color,
-    selectedColor,
-    backgroundColor,
-    borderStyle
-  })
+  const borderStyles = {
+    black: 'rgba(0,0,0,0.4)',
+    white: 'rgba(255,255,255,0.4)'
+  }
+  const borderStyle = style.borderStyle
+  if (borderStyle in borderStyles) {
+    style.borderStyle = borderStyles[borderStyle]
+  }
+  tabBar.setTabBarStyle(style)
   return {
     errMsg: 'setTabBarStyle:ok'
   }

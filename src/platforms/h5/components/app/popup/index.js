@@ -1,11 +1,11 @@
 import Toast from './toast'
 import Modal from './modal'
-import Picker from './picker'
 import ActionSheet from './actionSheet'
+import PreviewImage from './preview-image'
 
 export default {
   Toast,
   Modal,
-  Picker,
-  ActionSheet
+  ActionSheet,
+  PreviewImage
 }
